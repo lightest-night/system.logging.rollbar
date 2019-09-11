@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace LightestNight.System.Logging.Rollbar.Extends
 {
-    public static class ServiceCollection
+    public static class ExtendsServiceCollection
     {
         public static IServiceCollection AddRollbar(this IServiceCollection services)
         {
