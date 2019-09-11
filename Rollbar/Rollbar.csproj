@@ -24,7 +24,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="LightestNight.System.Api" Version="1.7.0" />
+      <PackageReference Include="LightestNight.System.Api" Version="1.8.0" />
       <PackageReference Include="LightestNight.System.Configuration" Version="1.2.0" />
       <PackageReference Include="LightestNight.System.Logging" Version="1.0.0" />
       <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />

@@ -1,6 +1,4 @@
 using System;
-using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using LightestNight.System.Api;
@@ -22,7 +20,12 @@ namespace LightestNight.System.Logging.Rollbar.Tests
         {
             Environment.SetEnvironmentVariable("Rollbar:AccessToken", _accessToken);
             var configurationManager = new ConfigurationManager(new ConfigurationBuilder());
-            _sut = new RollbarClient(_apiClientMock.Object, configurationManager);
+
+            var apiClientFactoryMock = new Mock<IApiClientFactory>();
+            apiClientFactoryMock.Setup(apiClientFactory => apiClientFactory.Create(It.IsAny<string>()))
+                .Returns(_apiClientMock.Object);
+            
+            _sut = new RollbarClient(apiClientFactoryMock.Object, configurationManager);
         }
 
         [Fact]

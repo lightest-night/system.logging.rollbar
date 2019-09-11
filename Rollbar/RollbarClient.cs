@@ -13,12 +13,12 @@ namespace LightestNight.System.Logging.Rollbar
 {
     public class RollbarClient : IRollbarClient
     {
-        private readonly IApiClient _apiClient;
+        private readonly IApiClientFactory _apiClientFactory;
         private readonly ConfigurationManager _configManager;
 
-        public RollbarClient(IApiClient apiClient, ConfigurationManager configManager)
+        public RollbarClient(IApiClientFactory apiClientFactory, ConfigurationManager configManager)
         {
-            _apiClient = apiClient;
+            _apiClientFactory = apiClientFactory;
             _configManager = configManager;
         }
         
@@ -26,13 +26,15 @@ namespace LightestNight.System.Logging.Rollbar
         {
             try
             {
+                var rollbarConfig = _configManager.Bind<RollbarConfig>();
                 var request = new ApiRequest("item/")
                 {
                     UseMachineToken = false,
-                    Body = GeneratePayload(logData)
+                    Body = GeneratePayload(logData, rollbarConfig)
                 };
 
-                await _apiClient.Post(request);
+                var apiClient = _apiClientFactory.Create(rollbarConfig.BaseUrl);
+                await apiClient.Post(request);
             }
             catch (Exception ex)
             {
@@ -41,7 +43,7 @@ namespace LightestNight.System.Logging.Rollbar
             }
         }
         
-        private RollbarPayload GeneratePayload(LogData log)
+        private RollbarPayload GeneratePayload(LogData log, RollbarConfig config)
         {
             var os = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                 ? OSPlatform.Windows.ToString()
@@ -76,7 +78,7 @@ namespace LightestNight.System.Logging.Rollbar
 
             return new RollbarPayload
             {
-                AccessToken = _configManager.Bind<RollbarConfig>().AccessToken,
+                AccessToken = config.AccessToken,
                 Data = new RollbarData
                 {
                     Environment = Environment.GetEnvironmentVariable("STAGE") ?? "test",
