@@ -9,7 +9,12 @@ namespace LightestNight.System.Logging.Rollbar
         /// <summary>
         /// The Log Message
         /// </summary>
-        public RollbarMessage Message { get; set; } = new RollbarMessage();
+        public RollbarMessage Message { get; set; }
+        
+        /// <summary>
+        /// The Trace
+        /// </summary>
+        public RollbarTrace Trace { get; set; }
 
         /// <summary>
         /// The severity level. One of: "critical", "error", "warning", "info", "debug"
