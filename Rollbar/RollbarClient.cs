@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -43,7 +44,7 @@ namespace LightestNight.System.Logging.Rollbar
             }
         }
         
-        private RollbarPayload GeneratePayload(LogData log, RollbarConfig config)
+        private static RollbarPayload GeneratePayload(LogData log, RollbarConfig config)
         {
             var os = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                 ? OSPlatform.Windows.ToString()
@@ -76,6 +77,46 @@ namespace LightestNight.System.Logging.Rollbar
                     break;
             }
 
+            RollbarMessage message = null;
+            RollbarTrace trace = null;
+
+            if (log.Exception != null)
+            {
+                var ex = log.Exception;
+                var stackTrace = new StackTrace(ex, true);
+                var frames = stackTrace.GetFrames()?.Select(frame => new RollbarFrame
+                {
+                    Filename = frame.GetFileName(),
+                    LineNumber = frame.GetFileLineNumber(),
+                    ColumnNumber = frame.GetFileColumnNumber(),
+                    Method = frame.GetMethod().Name,
+                    ClassName = frame.GetMethod().DeclaringType?.AssemblyQualifiedName,
+                    Arguments = frame.GetMethod().GetParameters().Select(arg => arg.Name)
+                });
+
+                trace = new RollbarTrace
+                {
+                    Frames = frames,
+                    Exception = new RollbarException
+                    {
+                        Class = ex.Source,
+                        Message = ex.Message,
+                        Description = log.Message
+                    }
+                };
+            }
+            else
+            {
+                message = new RollbarMessage
+                {
+                    Body = log.Message,
+                    Metadata = log.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public).ToDictionary(prop => prop.Name, prop => prop.GetValue(log, null)?.ToString())
+                };
+            }
+
+            if (trace != null)
+                message = null;
+
             return new RollbarPayload
             {
                 AccessToken = config.AccessToken,
@@ -90,11 +131,8 @@ namespace LightestNight.System.Logging.Rollbar
                         Timestamp = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds(),
                         Platform = os,
                         Framework = framework,
-                        Message = new RollbarMessage
-                        {
-                            Body = log.Message,
-                            Metadata = log.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public).ToDictionary(prop => prop.Name, prop => prop.GetValue(log, null)?.ToString())
-                        },
+                        Message = message,
+                        Trace = trace,
                         Notifier = new RollbarNotifier
                         {
                             Name = "Lightest Night"
