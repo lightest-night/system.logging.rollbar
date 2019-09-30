@@ -79,10 +79,11 @@ namespace LightestNight.System.Logging.Rollbar
 
             RollbarMessage message = null;
             RollbarTrace trace = null;
-
-            if (log.Exception != null)
+            
+            if (log.Exception is Exception || log.Exception?.GetType().BaseType == typeof(Exception))
             {
-                var ex = log.Exception;
+                var ex = (Exception)log.Exception;
+                
                 var stackTrace = new StackTrace(ex, true);
                 var frames = stackTrace.GetFrames()?.Select(frame => new RollbarFrame
                 {
@@ -113,9 +114,6 @@ namespace LightestNight.System.Logging.Rollbar
                     Metadata = log.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public).ToDictionary(prop => prop.Name, prop => prop.GetValue(log, null)?.ToString())
                 };
             }
-
-            if (trace != null)
-                message = null;
 
             return new RollbarPayload
             {
