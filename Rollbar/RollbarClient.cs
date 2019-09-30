@@ -34,7 +34,9 @@ namespace LightestNight.System.Logging.Rollbar
                     Body = GeneratePayload(logData, rollbarConfig)
                 };
 
-                var apiClient = _apiClientFactory.Create(rollbarConfig.BaseUrl);
+                var apiClient = _apiClientFactory.Create(rollbarConfig.BaseUrl)
+                    .SetSerializerSettings(settings => settings.NullValueHandling = NullValueHandling.Ignore);
+                    
                 await apiClient.Post(request);
             }
             catch (Exception ex)

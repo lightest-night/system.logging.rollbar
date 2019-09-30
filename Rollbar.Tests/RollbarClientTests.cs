@@ -6,13 +6,15 @@ using LightestNight.System.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Newtonsoft.Json;
+using RestSharp;
 using Xunit;
 
 namespace LightestNight.System.Logging.Rollbar.Tests
 {
     public class RollbarClientTests
     {
-        private readonly Mock<IApiClient> _apiClientMock = new Mock<IApiClient>();
+        private readonly Mock<IApiClient> _apiClientMock;
         private readonly string _accessToken = Guid.NewGuid().ToString();
         private readonly IRollbarClient _sut;
 
@@ -21,6 +23,10 @@ namespace LightestNight.System.Logging.Rollbar.Tests
             Environment.SetEnvironmentVariable("Rollbar:AccessToken", _accessToken);
             var configurationManager = new ConfigurationManager(new ConfigurationBuilder());
 
+            _apiClientMock = new Mock<IApiClient>();
+            _apiClientMock.Setup(apiClient => apiClient.SetSerializerSettings(It.IsAny<Action<JsonSerializerSettings>>(),
+                It.IsAny<DataFormat>(), It.IsAny<string[]>())).Returns(_apiClientMock.Object);
+            
             var apiClientFactoryMock = new Mock<IApiClientFactory>();
             apiClientFactoryMock.Setup(apiClientFactory => apiClientFactory.Create(It.IsAny<string>()))
                 .Returns(_apiClientMock.Object);
