@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LightestNight.System.Api;
 using LightestNight.System.Configuration;
+using LightestNight.System.Utilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -73,7 +74,7 @@ namespace LightestNight.System.Logging.Rollbar.Tests
                 Message = "Test Message",
                 Function = "Test Function",
                 Severity = LogLevel.Critical,
-                Exception = new Exception("Test Exception")
+                Exception = new LightestNightException(new Exception("Test Exception"))
             };
             
             // Act

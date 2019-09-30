@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -82,19 +81,18 @@ namespace LightestNight.System.Logging.Rollbar
             RollbarMessage message = null;
             RollbarTrace trace = null;
             
-            if (log.Exception is Exception || log.Exception?.GetType().BaseType == typeof(Exception))
+            if (log.Exception != null)
             {
-                var ex = (Exception)log.Exception;
-                
-                var stackTrace = new StackTrace(ex, true);
-                var frames = stackTrace.GetFrames()?.Select(frame => new RollbarFrame
+                var ex = log.Exception;
+
+                var frames = ex.Frames?.Select(frame => new RollbarFrame
                 {
-                    Filename = frame.GetFileName(),
-                    LineNumber = frame.GetFileLineNumber(),
-                    ColumnNumber = frame.GetFileColumnNumber(),
-                    Method = frame.GetMethod().Name,
-                    ClassName = frame.GetMethod().DeclaringType?.AssemblyQualifiedName,
-                    Arguments = frame.GetMethod().GetParameters().Select(arg => arg.Name)
+                    Filename = frame.Filename,
+                    LineNumber = frame.LineNumber,
+                    ColumnNumber = frame.ColumnNumber,
+                    Method = frame.Method,
+                    ClassName = frame.ClassName,
+                    Arguments = frame.Arguments
                 });
 
                 trace = new RollbarTrace
@@ -102,8 +100,8 @@ namespace LightestNight.System.Logging.Rollbar
                     Frames = frames,
                     Exception = new RollbarException
                     {
-                        Class = ex.Source,
-                        Message = ex.Message,
+                        Class = ex.Exception.Source,
+                        Message = ex.Exception.Message,
                         Description = log.Message
                     }
                 };
